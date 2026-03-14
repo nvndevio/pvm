@@ -1,0 +1,30 @@
+{
+  "name": "pvm-php",
+  "version": "0.1.0",
+  "description": "PHP Version Manager — Simple, fast PHP version management",
+  "type": "module",
+  "bin": {
+    "pvm": "./bin/pvm.js"
+  },
+  "scripts": {
+    "start": "node bin/pvm.js",
+    "lint": "echo 'No linter configured'"
+  },
+  "keywords": [
+    "php",
+    "version-manager",
+    "pvm",
+    "cli",
+    "developer-tools"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "commander": "^13.1.0",
+    "chalk": "^5.4.1",
+    "ora": "^8.2.0"
+  }
+}
