@@ -11,11 +11,39 @@ php -v  # PHP 8.3.x
 
 ## Install
 
+### Option 1: Quick install (recommended)
+
 ```bash
-git clone https://github.com/your-username/pvm.git
-cd pvm
-npm install
-make install
+curl -fsSL https://raw.githubusercontent.com/nvndevio/pvm/main/install.sh | bash
+```
+
+This will clone pvm to `~/.pvm` and auto-configure your shell.
+
+### Option 2: npm
+
+```bash
+npm install -g pvm-php
+```
+
+Then add to your `~/.zshrc` or `~/.bashrc`:
+
+```bash
+export PVM_DIR="$HOME/.pvm"
+[ -s "$PVM_DIR/pvm.sh" ] && source "$PVM_DIR/pvm.sh"
+```
+
+### Option 3: Homebrew (macOS)
+
+```bash
+brew tap nvndevio/tap
+brew install pvm
+```
+
+### Option 4: Manual
+
+```bash
+git clone https://github.com/nvndevio/pvm.git ~/.pvm
+cd ~/.pvm && npm install
 ```
 
 Add to your `~/.zshrc` or `~/.bashrc`:
@@ -25,13 +53,11 @@ export PVM_DIR="$HOME/.pvm"
 [ -s "$PVM_DIR/pvm.sh" ] && source "$PVM_DIR/pvm.sh"
 ```
 
-Then restart your terminal:
+Then restart your terminal: `source ~/.zshrc`
 
-```bash
-source ~/.zshrc
-```
+## Build Requirements
 
-## Requirements
+PHP is compiled from source, so you need build tools:
 
 **macOS** (via Homebrew):
 
@@ -46,6 +72,8 @@ brew install openssl readline libzip icu4c oniguruma pkg-config autoconf bison r
 sudo apt install build-essential libxml2-dev libssl-dev libcurl4-openssl-dev \
   libzip-dev libonig-dev libreadline-dev libsqlite3-dev pkg-config autoconf bison re2c
 ```
+
+Run `pvm doctor` to check if your system is ready.
 
 ## Usage
 
@@ -106,26 +134,25 @@ Create a `.php-version` file in your project root:
 8.2
 ```
 
-When you `cd` into the project, pvm will automatically switch to the specified version.
+When you `cd` into the project, pvm automatically switches to the specified version.
 
 ## How it works
-
-1. PHP versions are built from source and installed to `~/.pvm/versions/<version>/`
-2. `pvm use` creates a symlink at `~/.pvm/current` pointing to the active version
-3. The shell integration adds `~/.pvm/current/bin` to your `PATH`
-4. When using the shell function, `pvm use` directly updates `PATH` in your current shell
 
 ```
 ~/.pvm/
 ├── versions/
-│   ├── 8.1.27/
+│   ├── 8.1.27/        # Each version built from source
 │   ├── 8.2.25/
 │   └── 8.3.14/
-├── current -> versions/8.3.14
-├── cache/          # Downloaded source tarballs
-├── bin/pvm         # CLI binary
-└── pvm.sh          # Shell integration
+├── current -> versions/8.3.14    # Symlink to active version
+├── cache/              # Downloaded source tarballs
+├── bin/pvm             # CLI binary
+└── pvm.sh              # Shell integration
 ```
+
+1. `pvm install` downloads PHP source from php.net, configures, and builds it
+2. `pvm use` creates a symlink at `~/.pvm/current` and updates your `PATH`
+3. The shell integration auto-loads the active version on terminal start
 
 ## Commands
 
