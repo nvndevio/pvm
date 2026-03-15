@@ -1,7 +1,8 @@
-import { homedir } from 'node:os';
+import { homedir, platform } from 'node:os';
 import { join } from 'node:path';
 import { mkdirSync, existsSync } from 'node:fs';
 
+const IS_WINDOWS = platform() === 'win32';
 const HOME = homedir();
 const PVM_DIR = process.env.PVM_DIR || join(HOME, '.pvm');
 
@@ -26,5 +27,10 @@ export function versionDir(version) {
 }
 
 export function versionBinDir(version) {
+  // Windows: php.exe is in the root of the version dir
+  // macOS/Linux: php is in the bin/ subdirectory
+  if (IS_WINDOWS) {
+    return join(paths.versions, version);
+  }
   return join(paths.versions, version, 'bin');
 }

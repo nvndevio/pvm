@@ -1,16 +1,21 @@
+import { platform } from 'node:os';
 import { paths } from '../core/config.js';
 
 export function registerEnvCommand(program) {
   program
     .command('env')
     .description('Print shell integration code (add to your .zshrc/.bashrc)')
-    .option('--shell <type>', 'Shell type: bash, zsh, fish', detectShell())
+    .option('--shell <type>', 'Shell type: bash, zsh, fish, powershell', detectShell())
     .action((opts) => {
-      const shellType = opts.shell || 'zsh';
+      const shellType = opts.shell || detectShell();
 
       switch (shellType) {
         case 'fish':
           printFishInit();
+          break;
+        case 'powershell':
+        case 'pwsh':
+          printPowerShellInit();
           break;
         default:
           printBashZshInit();
@@ -20,6 +25,7 @@ export function registerEnvCommand(program) {
 }
 
 function detectShell() {
+  if (platform() === 'win32') return 'powershell';
   const shell = process.env.SHELL || '';
   if (shell.includes('fish')) return 'fish';
   if (shell.includes('zsh')) return 'zsh';
@@ -104,5 +110,37 @@ end
 if test -d "\$PVM_DIR/current/bin"
   fish_add_path --prepend "\$PVM_DIR/current/bin"
 end
+`.trim());
+}
+
+function printPowerShellInit() {
+  console.log(`
+$env:PVM_DIR = "${paths.root.replace(/\\/g, '\\\\')}"
+
+function pvm {
+    if ($args[0] -eq "use") {
+        $useArgs = $args[1..($args.Length - 1)]
+        $binPath = & node "$env:PVM_DIR\\bin\\pvm.js" use @useArgs --shell-output 2>$null
+        if ($LASTEXITCODE -eq 0 -and $binPath -and (Test-Path $binPath)) {
+            $paths = $env:PATH -split ';' | Where-Object {
+                $_ -notlike "*$env:PVM_DIR\\versions*"
+            }
+            $env:PATH = ($binPath + ';' + ($paths -join ';'))
+            $v = & "$binPath\\php.exe" -r "echo PHP_VERSION;" 2>$null
+            Write-Host "  ✓ Now using PHP $v" -ForegroundColor Green
+        } else {
+            & node "$env:PVM_DIR\\bin\\pvm.js" use @useArgs
+        }
+    } else {
+        & node "$env:PVM_DIR\\bin\\pvm.js" @args
+    }
+}
+
+$currentFile = "$env:PVM_DIR\\current"
+if (Test-Path $currentFile) {
+    $ver = (Get-Content $currentFile -Raw).Trim()
+    $bin = "$env:PVM_DIR\\versions\\$ver"
+    if (Test-Path "$bin\\php.exe") { $env:PATH = "$bin;$env:PATH" }
+}
 `.trim());
 }

@@ -2,6 +2,8 @@
 
 Simple, fast PHP version management. Inspired by [nvm](https://github.com/nvm-sh/nvm).
 
+**Cross-platform:** macOS, Linux, and Windows.
+
 ```
 pvm install 8.3
 pvm use 8.3
@@ -11,15 +13,15 @@ php -v  # PHP 8.3.x
 
 ## Install
 
-### Option 1: Quick install (recommended)
+### macOS / Linux
+
+**Quick install (recommended):**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/nvndevio/pvm/main/install.sh | bash
 ```
 
-This will clone pvm to `~/.pvm` and auto-configure your shell.
-
-### Option 2: npm
+**Or via npm:**
 
 ```bash
 npm install -g pvm-php
@@ -32,32 +34,46 @@ export PVM_DIR="$HOME/.pvm"
 [ -s "$PVM_DIR/pvm.sh" ] && source "$PVM_DIR/pvm.sh"
 ```
 
-### Option 3: Homebrew (macOS)
+### Windows
 
-```bash
-brew tap nvndevio/tap
-brew install pvm
+**Quick install (PowerShell):**
+
+```powershell
+irm https://raw.githubusercontent.com/nvndevio/pvm/main/install.ps1 | iex
 ```
 
-### Option 4: Manual
+**Or via npm:**
+
+```powershell
+npm install -g pvm-php
+```
+
+Then add to your PowerShell profile (`$PROFILE`):
+
+```powershell
+$env:PVM_DIR = "$env:USERPROFILE\.pvm"
+. "$env:PVM_DIR\pvm.ps1"
+```
+
+### Manual (all platforms)
 
 ```bash
 git clone https://github.com/nvndevio/pvm.git ~/.pvm
 cd ~/.pvm && npm install
 ```
 
-Add to your `~/.zshrc` or `~/.bashrc`:
+## Platform Differences
 
-```bash
-export PVM_DIR="$HOME/.pvm"
-[ -s "$PVM_DIR/pvm.sh" ] && source "$PVM_DIR/pvm.sh"
-```
+| | macOS / Linux | Windows |
+|---|---|---|
+| Install method | Build from source | Pre-built binaries from windows.php.net |
+| Install speed | 5-15 min (compiling) | ~30 sec (download only) |
+| Build tools required | Yes (gcc, make, etc.) | No |
+| Shell integration | bash / zsh / fish | PowerShell / CMD |
 
-Then restart your terminal: `source ~/.zshrc`
+## Build Requirements (macOS / Linux only)
 
-## Build Requirements
-
-PHP is compiled from source, so you need build tools:
+Windows users can skip this — pvm downloads pre-built binaries automatically.
 
 **macOS** (via Homebrew):
 
@@ -120,7 +136,7 @@ pvm available           # PHP 8.x versions
 pvm available --major 7 # PHP 7.x versions
 ```
 
-### Check build dependencies
+### Check system dependencies
 
 ```bash
 pvm doctor
@@ -141,30 +157,30 @@ When you `cd` into the project, pvm automatically switches to the specified vers
 ```
 ~/.pvm/
 ├── versions/
-│   ├── 8.1.27/        # Each version built from source
+│   ├── 8.1.27/
 │   ├── 8.2.25/
 │   └── 8.3.14/
-├── current -> versions/8.3.14    # Symlink to active version
-├── cache/              # Downloaded source tarballs
+├── current             # Symlink (Unix) or version file (Windows)
+├── cache/              # Downloaded tarballs / zips
 ├── bin/pvm             # CLI binary
 └── pvm.sh              # Shell integration
 ```
 
-1. `pvm install` downloads PHP source from php.net, configures, and builds it
-2. `pvm use` creates a symlink at `~/.pvm/current` and updates your `PATH`
-3. The shell integration auto-loads the active version on terminal start
+- **macOS/Linux:** Downloads PHP source, compiles with common extensions, installs to `~/.pvm/versions/`
+- **Windows:** Downloads pre-built NTS binary from windows.php.net, extracts to `~/.pvm/versions/`
+- `pvm use` updates the active version and your shell `PATH`
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `pvm install <version>` | Download and build a PHP version |
+| `pvm install <version>` | Install a PHP version |
 | `pvm use <version>` | Switch to an installed version |
 | `pvm list` | List installed versions |
 | `pvm current` | Show active version |
 | `pvm uninstall <version>` | Remove a version |
 | `pvm available` | List versions available to install |
-| `pvm doctor` | Check build dependencies |
+| `pvm doctor` | Check system dependencies |
 | `pvm env` | Print shell integration code |
 
 ## License

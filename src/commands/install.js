@@ -4,6 +4,7 @@ import { resolveVersion } from '../core/resolver.js';
 import { downloadSource } from '../core/downloader.js';
 import { buildFromSource, checkDependencies, suggestInstall } from '../core/builder.js';
 import { isInstalled, setCurrentVersion } from '../core/versions.js';
+import { IS_WINDOWS } from '../core/platform.js';
 import { log, formatDuration } from '../utils/ui.js';
 
 export function registerInstallCommand(program) {
@@ -17,15 +18,6 @@ export function registerInstallCommand(program) {
       try {
         ensureDirs();
 
-        const missing = checkDependencies();
-        if (missing.length > 0) {
-          log.warn('Missing build dependencies:');
-          suggestInstall(missing);
-          log.blank();
-          log.error('Please install the missing dependencies and try again.');
-          process.exit(1);
-        }
-
         const version = await resolveVersion(versionInput);
 
         if (isInstalled(version)) {
@@ -37,12 +29,35 @@ export function registerInstallCommand(program) {
           return;
         }
 
-        log.blank();
+        let installDir;
 
-        const tarball = await downloadSource(version);
-        log.blank();
+        if (IS_WINDOWS) {
+          const { installWindowsBinary, checkWindowsDependencies } = await import('../core/windows.js');
 
-        const installDir = await buildFromSource(tarball, version);
+          const missing = checkWindowsDependencies();
+          if (missing.length > 0) {
+            log.error(`Missing: ${missing.join(', ')}`);
+            process.exit(1);
+          }
+
+          log.blank();
+          installDir = await installWindowsBinary(version);
+        } else {
+          const missing = checkDependencies();
+          if (missing.length > 0) {
+            log.warn('Missing build dependencies:');
+            suggestInstall(missing);
+            log.blank();
+            log.error('Please install the missing dependencies and try again.');
+            process.exit(1);
+          }
+
+          log.blank();
+          const tarball = await downloadSource(version);
+          log.blank();
+          installDir = await buildFromSource(tarball, version);
+        }
+
         log.blank();
 
         if (opts.switch !== false) {

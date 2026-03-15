@@ -5,6 +5,8 @@ import { existsSync } from 'node:fs';
 import { paths } from '../core/config.js';
 import { log } from '../utils/ui.js';
 
+const IS_WINDOWS = platform() === 'win32';
+
 export function registerDoctorCommand(program) {
   program
     .command('doctor')
@@ -12,35 +14,45 @@ export function registerDoctorCommand(program) {
     .action(() => {
       console.log();
       console.log(chalk.bold('  pvm doctor'));
+      console.log(chalk.gray(`  Platform: ${platform()}`));
       console.log();
 
       let allGood = true;
 
       allGood = checkCommand('node', 'Node.js') && allGood;
-      allGood = checkCommand('gcc', 'C Compiler (gcc)') && allGood;
-      allGood = checkCommand('make', 'Make') && allGood;
-      allGood = checkCommand('tar', 'Tar') && allGood;
-      allGood = checkCommand('pkg-config', 'pkg-config') && allGood;
-      allGood = checkCommand('autoconf', 'autoconf') && allGood;
-      allGood = checkCommand('bison', 'Bison') && allGood;
-      allGood = checkCommand('re2c', 're2c') && allGood;
 
-      console.log();
+      if (IS_WINDOWS) {
+        allGood = checkWindowsCommand('powershell', 'PowerShell') && allGood;
+        console.log();
+        console.log(chalk.bold('  Windows mode:'));
+        console.log(`  ${chalk.green('ℹ')} Pre-built binaries from windows.php.net (no compiler needed)`);
+      } else {
+        allGood = checkCommand('gcc', 'C Compiler (gcc)') && allGood;
+        allGood = checkCommand('make', 'Make') && allGood;
+        allGood = checkCommand('tar', 'Tar') && allGood;
+        allGood = checkCommand('pkg-config', 'pkg-config') && allGood;
+        allGood = checkCommand('autoconf', 'autoconf') && allGood;
+        allGood = checkCommand('bison', 'Bison') && allGood;
+        allGood = checkCommand('re2c', 're2c') && allGood;
 
-      if (platform() === 'darwin') {
-        console.log(chalk.bold('  Homebrew libraries:'));
         console.log();
-        allGood = checkBrewPackage('openssl') && allGood;
-        allGood = checkBrewPackage('readline') && allGood;
-        allGood = checkBrewPackage('libzip') && allGood;
-        allGood = checkBrewPackage('icu4c') && allGood;
-        allGood = checkBrewPackage('oniguruma') && allGood;
-        allGood = checkBrewPackage('libxml2') && allGood;
-        allGood = checkBrewPackage('curl') && allGood;
-        allGood = checkBrewPackage('zlib') && allGood;
-        console.log();
+
+        if (platform() === 'darwin') {
+          console.log(chalk.bold('  Homebrew libraries:'));
+          console.log();
+          allGood = checkBrewPackage('openssl') && allGood;
+          allGood = checkBrewPackage('readline') && allGood;
+          allGood = checkBrewPackage('libzip') && allGood;
+          allGood = checkBrewPackage('icu4c') && allGood;
+          allGood = checkBrewPackage('oniguruma') && allGood;
+          allGood = checkBrewPackage('libxml2') && allGood;
+          allGood = checkBrewPackage('curl') && allGood;
+          allGood = checkBrewPackage('zlib') && allGood;
+          console.log();
+        }
       }
 
+      console.log();
       console.log(chalk.bold('  pvm directories:'));
       console.log();
       checkDir(paths.root, 'PVM_DIR');
@@ -49,11 +61,13 @@ export function registerDoctorCommand(program) {
       console.log();
 
       if (allGood) {
-        log.success('All dependencies are satisfied. Ready to build PHP!');
+        log.success('All dependencies are satisfied. Ready to install PHP!');
       } else {
         log.warn('Some dependencies are missing.');
         console.log();
-        if (platform() === 'darwin') {
+        if (IS_WINDOWS) {
+          log.info('Ensure PowerShell is available (included in Windows 10+).');
+        } else if (platform() === 'darwin') {
           log.info('Install missing dependencies with Homebrew:');
           log.plain('brew install openssl readline libzip icu4c oniguruma pkg-config autoconf bison re2c');
         } else {
@@ -66,9 +80,21 @@ export function registerDoctorCommand(program) {
 }
 
 function checkCommand(cmd, label) {
+  const whichCmd = IS_WINDOWS ? 'where' : 'which';
   try {
-    const path = execSync(`which ${cmd}`, { encoding: 'utf8', stdio: 'pipe' }).trim();
-    console.log(`  ${chalk.green('✓')} ${label.padEnd(22)} ${chalk.gray(path)}`);
+    const p = execSync(`${whichCmd} ${cmd}`, { encoding: 'utf8', stdio: 'pipe' }).trim().split('\n')[0];
+    console.log(`  ${chalk.green('✓')} ${label.padEnd(22)} ${chalk.gray(p)}`);
+    return true;
+  } catch {
+    console.log(`  ${chalk.red('✗')} ${label.padEnd(22)} ${chalk.red('not found')}`);
+    return false;
+  }
+}
+
+function checkWindowsCommand(cmd, label) {
+  try {
+    execSync(`${cmd} -Command "echo ok"`, { stdio: 'pipe' });
+    console.log(`  ${chalk.green('✓')} ${label.padEnd(22)} ${chalk.gray('available')}`);
     return true;
   } catch {
     console.log(`  ${chalk.red('✗')} ${label.padEnd(22)} ${chalk.red('not found')}`);

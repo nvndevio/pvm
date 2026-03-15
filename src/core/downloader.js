@@ -13,7 +13,7 @@ const MIRRORS = [
 ];
 
 /**
- * Download PHP source tarball. Returns path to the .tar.gz file.
+ * Download PHP source tarball (macOS/Linux). Returns path to the .tar.gz file.
  * Uses cache if already downloaded.
  */
 export async function downloadSource(version) {
@@ -56,7 +56,11 @@ export async function downloadSource(version) {
   return cachePath;
 }
 
-async function downloadFile(url, dest, onProgress) {
+/**
+ * Generic file download with progress callback.
+ * Exported for use by the Windows installer.
+ */
+export async function downloadFile(url, dest, onProgress) {
   const res = await fetch(url, { redirect: 'follow' });
 
   if (!res.ok) {
