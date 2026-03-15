@@ -1,6 +1,6 @@
 {
   "name": "pvm-php",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "PHP Version Manager — Simple, fast PHP version management",
   "type": "module",
   "bin": {
